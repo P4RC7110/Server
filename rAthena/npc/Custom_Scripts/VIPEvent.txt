@@ -1,0 +1,37 @@
+
+-	script	LoginVIPEvent	-1,{
+OnInit:
+			bindatcmd "vipevent","LoginVIPEvent::OnDoReset",99,100;
+end;
+
+OnDoReset:
+		if ( compare( .@atcmd_parameters$, "reset" ) ) {
+
+				if(.svn){
+					query_sql "DELETE FROM `acc_reg_num_db` WHERE `key`='#vip'";
+				}else{
+					query_sql "DELETE FROM `global_reg_value` WHERE `str`='#vip'";
+				}
+			dispbottom "VIP Event has been reset.";
+			end;
+		}else if ( compare( .@atcmd_parameters$, "on" ) ) {
+			set .vip,1;
+			dispbottom "VIP Event is now enabled.";
+			end;
+		}else if ( compare( .@atcmd_parameters$, "off" ) ) {
+			set .vip,0;
+			dispbottom "VIP Event is now disabled.";
+			end;
+		}
+end;
+
+OnPCLoginEvent:
+	if(.vip){
+		if ( getgmlevel() < 1 ){
+			if(#vip){end;}
+				atcommand "@vip 1d "+strcharinfo(0);
+				set #vip,1;
+				end;
+		}
+	}
+}

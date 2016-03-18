@@ -1,0 +1,243 @@
+alberta,148,52,3	script	Officer	831,{
+/*==========================================
+* sendmail <Recipient's Char ID>,"<Sender's Name>","<Title>","<Body>",<zeny>,<item_id>,<amount>{,<refine>,<attribute>,<card1>,<card2>,<card3>,<card4>};
+*------------------------------------------*/				  
+		mes .npc$;
+		mes "Good day, I am the one who is in charge on giving rewards for those who join the ^0000FF'"+.subject$+"'^000000 event.";
+		mes " ";
+		mes "^ff0000What can I do for you?^000000";
+next;
+switch(select("Enter the code."+((getgmlevel() >= 80)?":Generate Codes:Reset Codes:Change Rewards:Reset Rewards":"")+"")){
+case 1:
+	input .@code$;
+			if(.claimtype = 1){
+				query_sql ("SELECT `email` FROM `login` WHERE `account_id` = '"+getcharid(3)+"'",.@email1);
+			}
+				query_sql ("SELECT `code`,`status`,`account_id`,`email_add` FROM `code_db` WHERE `code` = '"+.@code$+"'",.@check,.@status,.@acc,.@email2);
+
+	if(.@status == 2){
+		mes " ";
+		mes " ";
+		mes "################################";
+		mes "^ff0000          CODE IS ALREADY CLAIMED.^000000";
+		mes "################################";
+		close;
+	}else if(!.@status){
+		mes " ";
+		mes " ";
+		mes "###############################";
+		mes "^ff0000CODE '"+.@code$+"' IS NOT AVAILABLE.^000000";
+		mes "###############################";
+		close;
+	}else if(.@acc != getcharid(3) && .claimtype == 0 ){
+		mes " ";
+		mes " ";
+		mes "###############################";
+		mes "^ff0000  CODE '"+.@code$+"' IS NOT FOR YOU.^000000";
+		mes "###############################";
+		close;
+	}else if(.claimtype == 1 && .@email1 != .@email2 ){
+		mes " ";
+		mes " ";
+		mes "###############################";
+		mes "^ff0000  CODE '"+.@code$+"' IS NOT FOR YOU.^000000";
+		mes "###############################";
+		close;
+	}
+			query_sql ("SELECT `item_id`,`item_amount`,`refine`,`bounded`,`rental` FROM `code_reward_db`",.@itemid,.@itemamount,.@refine,.@bounded,.@rental);
+			
+			query_sql ("SELECT `userid` FROM `login` WHERE `account_id` = '"+getcharid(3)+"'",.@userid1$);
+				for( set .@i, 0; .@i < getarraysize(.@itemid); set .@i, .@i + 1 ){
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`, `bounded`, `rental`) VALUES ('"+.@userid1$+"',"+.@itemid[.@i]+","+.@itemamount[.@i]+","+.@refine[.@i]+","+.@bounded[.@i]+","+.@rental[.@i]+")";
+				}
+			query_sql "update `code_db` set `status` = '2' where `code` = '"+.@code$+"'";
+		mes " ";
+		mes " ";
+		mes "################################";
+		mes "^ff0000       CODE '"+.@code$+"' APPROVED.^000000";
+		mes "################################";
+	dispbottom "Item(s) has been sent to the Reward NPC. Please proceed to Alberta.";
+	close;
+	
+
+case 2:
+		for(set .@k, 0; .@k < .code_limit; set .@k, .@k+1){
+			for(set .@i, 0; .@i < .code_length; set .@i, .@i+1){
+				set .@random_char, rand(0,(getarraysize(.code_code$)-1));
+				set .@new_code$, .@new_code$ + .code_code$[.@random_char];
+			}
+			query_sql "INSERT INTO `code_db` (`code`, `status`) VALUES ('"+.@new_code$+"','0')";
+			deletearray .@new_code$,1;
+		}
+		mes " ";
+		mes " ";
+		mes "################################";
+		mes "^ff0000      CODES HAS BEEN GENERATED.^000000";
+		mes "################################";
+		close;
+case 3:
+		query_sql "DELETE FROM `code_db`";
+
+		if(.svn){
+			query_sql "DELETE FROM `acc_reg_num_db` WHERE `key`='#code'";
+		}else{
+			query_sql "DELETE FROM `global_reg_value` WHERE `str`='#code'";
+		}
+		mes " ";
+		mes " ";
+		mes "###############################";
+		mes "^ff0000          CODES HAS BEEN RESET.^000000";
+		mes "###############################";
+		close;
+case 4:
+		query_sql ("SELECT `item_id`,`item_amount`,`refine`,`bounded`,`rental` FROM `code_reward_db`",.@itemid,.@itemamount,.@refine,.@bounded,.@rental);
+		mes "###############################";
+		mes "^0000ffREWARD LIST.^000000";
+		if(!.@itemid){mes "^404040 none^000000";}
+		for(set .@k, 0; .@k < getarraysize(.@itemid); set .@k, .@k+1){
+		mes "^ff0000"+(1+.@k)+"^000000. "+((.@refine[.@k] >= 1)?"+"+.@refine[.@k] +" ":"") + ""+getitemname(.@itemid[.@k])+""+"["+getitemslots(.@itemid[.@k])+"] x "+.@itemamount[.@k]+"";
+		}
+		mes "###############################";
+		next;
+		mes .npc$;
+		mes "Do you want to add?";
+		next;
+			if(select("Yes:No") == 2){
+			mes .npc$;
+   			mes "Okay, see you next time.";
+			close;
+			}
+		mes .npc$;
+		mes "Item:";
+		mes "Amount:";
+		mes "Refinement:";
+		mes "Bound Type:";
+		mes "Rental Time:";
+		mes " ";
+		mes "Insert item id.";
+		next;
+		input .@iid;
+		mes .npc$;
+		mes "Item: ["+.@iid+"] "+getitemname(.@iid)+"";
+		mes "Amount:";
+		mes "Refinement:";
+		mes "Bound Type:";
+		mes "Rental Time:";
+		mes " ";
+		next;
+		input .@ia;
+		mes .npc$;
+		mes "Item: ["+.@iid+"] "+getitemname(.@iid)+"";
+		mes "Amount: "+.@ia+"";
+		mes "Refinement:";
+		mes "Bound Type:";
+		mes "Rental Time:";
+		mes " ";
+		next;
+		input .@ref;
+		mes .npc$;
+		mes "Item: ["+.@iid+"] "+getitemname(.@iid)+"";
+		mes "Amount: "+.@ia+"";
+		mes "Refinement:"+.@ref+"";
+		mes "Bound Type:";
+		mes "Rental Time:";
+		mes " ";
+		next;
+		input .@bound;
+		mes .npc$;
+		mes "Item: ["+.@iid+"] "+getitemname(.@iid)+"";
+		mes "Amount: "+.@ia+"";
+		mes "Refinement:"+.@ref+"";
+		mes "Bound Type:"+.@bound+"";
+		mes "Rental Time:";
+		mes " ";
+		next;
+		input .@rent;
+		mes .npc$;
+		mes "Item: ["+.@iid+"] "+getitemname(.@iid)+"";
+		mes "Amount: "+.@ia+"";
+		mes "Refinement:"+.@ref+"";
+		mes "Bound Type:"+.@bound+"";
+		mes "Rental Time:"+.@rent+" minutes";
+		mes " ";
+		mes "Are you sure with this?";
+			if(select("Okay:Nevermind") == 2){
+			mes .npc$;
+   			mes "Okay, see you next time.";
+			close;
+			}
+		next;
+		query_sql "INSERT INTO `code_reward_db` (`item_id`, `item_amount`, `refine`, `bounded`, `rental`) VALUES ("+.@iid+","+.@ia+","+.@ref+","+.@bound+","+.@rent+")";
+		mes .npc$;
+		mes "Item has been restored to the database.";
+		close;
+case 5:
+		query_sql "DELETE FROM `code_reward_db`";
+		mes " ";
+		mes " ";
+		mes "###############################";
+		mes "^ff0000         REWARDS HAS BEEN RESET.^000000";
+		mes "###############################";
+		close;
+}
+
+
+
+OnInit:
+set .svn,0;			// 0 - rAthena/eAthena, 1 - Hercules
+set .claimtype,1;	// 0 = IP/Account , 1 = Email Address
+set .npc$, "[Officer]";								
+set .sender$, "Admin";						
+set .subject$, "The Pioneers";										
+set .Zeny,0;
+set .IpEnable,1;
+// Code Section	
+set .code_limit, 30;
+set .code_length, 9;	//Max code length to generate	
+setarray .code_code$[0],"a","b","c","d","e","f","g","h","i","j","k","l",
+							  "m","n","o","p","q","r","s","t","u","v","w","x",
+							  "y","z","0","1","2","3","4","5","6","7","8","9";
+end;
+
+/*
+OnPCLoginEvent:
+	if(#code){end;}
+	query_sql ("SELECT `code` FROM `code_db` WHERE `status` = '0'",.@code$);
+	query_sql ("SELECT `last_ip` FROM `code_db` WHERE `last_ip` = '"+getcharip()+"'",.@ip$);
+	if(getarraysize(.@code$) < 1){end;}
+	if(.IpEnable){
+		if(getarraysize(.@ip$) >= 1)end;
+	}
+	set #code,1;
+	set .@codes$,.@code$[rand(getarraysize(.@code$))];
+	set .@message$, "Congratulations!! You have receive a code '"+.@codes$+"' from "+.subject$+". Note: Delete this message after claiming the reward.";
+	sendmail getcharid(0),.sender$,.subject$,.@message$,.Zeny;
+	query_sql "update `code_db` set `status` = '1' where `code` = '"+.@codes$+"'";
+	query_sql "update `code_db` set `account_id` = '"+getcharid(3)+"' where `code` = '"+.@codes$+"'";
+	query_sql "update `code_db` set `last_ip` = '"+getcharip()+"' where `code` = '"+.@codes$+"'";
+end;
+*/
+}
+
+/*
+CREATE TABLE IF NOT EXISTS `code_db` (
+  `code` varchar(20) NOT NULL default '',
+  `status` int(1) unsigned NOT NULL DEFAULT '0',
+  `account_id` int(1) unsigned NOT NULL DEFAULT '0',
+  `last_ip` VARCHAR(100) NOT NULL DEFAULT '',
+  `email_add` VARCHAR(100) NOT NULL DEFAULT '',
+  PRIMARY KEY (`code`),
+  KEY `id` (`status`)
+) ENGINE=MyISAM;
+
+CREATE TABLE IF NOT EXISTS `code_reward_db` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `item_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `item_amount` int(11) unsigned NOT NULL DEFAULT '0',
+  `refine` int(2) unsigned NOT NULL DEFAULT '0',
+  `bounded` int(1) unsigned NOT NULL DEFAULT '0',
+  `rental` int(23) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `id` (`item_amount`)
+) ENGINE=MyISAM;
+*/

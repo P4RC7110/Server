@@ -1,0 +1,21 @@
+
+-	script	News	-1,{
+
+OnInit:
+set .Time,30;		// Announce every x Minute.
+set .Delay,180;
+
+setarray .News$[0],	// Random Message to be Announced
+			"[Notice] Attention to all Citizens of Rune Midgard, we are not liable for any item lost if we are not main reason.",
+			"[Notice] Don't forget to write a review on www.ratemyserver.net and like our facebook page www.facebook.com/ROPH.WeDevGames for more updates.";
+
+while( 1 ){
+	for( set .@i, 0; .@i < getarraysize(.News$); set .@i, .@i + 1 ){
+	announce .News$[.@i],0;
+	sleep ( .Delay * 1000 );
+	}
+	sleep ( .Time * 60000 );
+	}
+end;
+
+}

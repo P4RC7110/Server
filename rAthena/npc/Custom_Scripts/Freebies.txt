@@ -1,0 +1,157 @@
+//=================================================================================================
+//== Guild Package System + Freebies System + Reward System 
+//== By: ==========================================================================================
+//== Noriel Calingasan ==
+//== Email: =======================================================================================
+//== noriel.calingasan@yahoo.com ==
+//== Current Version ==============================================================================
+//== 1.4 ==
+//== Working on eAthena,rAthena and Hercules.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.4 Version ==
+//== A new package of Guild Package System, Freebies System and Reward System.
+//== Change and clean some of the variables in the script.
+//== Added freebies script to the package.
+//== Added bound and rental item settings to the Reward NPC.
+//== Added item refinement settings for equipments only.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.3 Version ==
+//== Fixed the @gpcheck command.
+//== Clean the script and SQL database.
+//== Script is now working on Hercules SVN.
+//== Added list of items that you can claim after checking the qualified members you have.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.2 Version ==
+//== All bugs are fixed and 100% safe.
+//== Added notification for players if the guild master is applying for the guild package.
+//== Added guild members divisor.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.1 Version ==
+//== Added required level to avoid character abuse.
+//===== Description: ==============================================================================
+//== All registered account will be stored automatically to the database depending to your settings.
+//== All items can be claimed in the reward npc.
+//== Suggestion: Use Harmony to avoid IP Address changing.
+//=================================================================================================
+
+//-------------------------------------------------------------------------------------------------	
+//	Note 1: If .itemtype is set to 2 your .@FreebiesAmount value will be always 1.
+//	Note 2: Don't set to 2 if your svn don't support rentitem2 script command.
+//	Note 3: Item Bound System working on rAthena and Hercules
+//	Note 4: Works only if the .itemtype is set to 2. 60 = 1 minute / 3600 = 1 hour / 86400 = 1 day / 604800 = 1 week
+//	Note 5: Item refinement must don't exceed the limit or else item refinement will stay on the 
+//          server max item refinement.
+//-------------------------------------------------------------------------------------------------	
+
+-	script	Freebies	-1,{
+
+OnInit:
+
+//-------------------------------------------------------------------------------------------------	
+
+	set .macip$,0;
+	set .GmLvl,100;		
+	
+//-------------------------------------------------------------------------------------------------	
+	set .svn,0;			// 0 - rAthena/eAthena, 1 - Hercules
+	set .check,2;		// 0 - IP, 1 - MAC, 2 - Account ( It means you can set it to store IP,MAC to the database or Off for freebies per account )
+	set .itemtype,2;	// 0 - Disable, 1 - Item bound, 2 - Rental (Note 2)
+	set .boundtype,1;	// 1 - Account Bound, 2 - Guild Bound, 3 - Party Bound, 4 - Character Bound (Note 3)
+
+	bindatcmd "freebies","Freebies::OnDoFreebies",0,100;		// Admin reset command
+//-------------------------------------------------------------------------------------------------	
+	end;
+
+OnDoFreebies:
+//-------------------------------------------------------------------------------------------------	
+	//setarray .@freebiesHG[0], 5137,5382,5373,5210,5376,5374;
+	//.@freebiesHG[rand(getarraysize(.@freebiesHG))]
+	setarray .@LOItems[0],		2504, 2310, 2102, 2404,1408,1602,1705,1505,1302,1251,1208;			// Input the freebies item number that will be sent to the Reward NPC.
+	setarray .@FreebiesAmount[0],      1,    1,    1,    1,   1,   1,   1,   1,   1,   1,   1;			// Input the freebies item amount that will be sent to the Reward NPC. (Note 1)
+	setarray .@ItemRefine[0],	   4,    4,    4,    4,   7,   7,   7,   7,   7,   7,   7;			// Input the refinement of each item. ( Recommended only to equipment type items. ) (Note 5)
+	setarray .@RentTime[0],		   0,    0,    0,    0,   0,   0,   0,   0,   0,   0,   0;			// Input the expiration time of each item. ( Recommended only to equipment type items. ) (Note 4)
+//-------------------------------------------------------------------------------------------------		
+		if ( getgmlevel() >= .@GmLvl && compare( .@atcmd_parameters$, "reset" ) ) {
+
+			if(.check == 2){
+				if(.svn){
+					query_sql "DELETE FROM `acc_reg_num_db` WHERE `key`='#freebies'";
+				}else{
+					query_sql "DELETE FROM `global_reg_value` WHERE `str`='#freebies'";
+				}
+			}else{
+				query_sql "DELETE FROM `freebies_db`";
+			}
+			dispbottom "Freebies Database has been reset";
+			end;
+		}
+		
+	set .@faccid, getcharid(3);		
+	if(.check == 2){
+		if(!#freebies){
+			query_sql ("SELECT `userid` FROM `login` WHERE `account_id` = '"+.@faccid+"'",.@userid1$);
+				for( set .@i, 0; .@i < getarraysize(.@LOItems); set .@i, .@i + 1 ){
+					if(.itemtype == 1){
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`, `bounded`) VALUES ('"+.@userid1$+"',"+.@LOItems[.@i]+","+.@FreebiesAmount[.@i]+","+.@ItemRefine[.@i]+","+.boundtype+")";
+					}else if(.itemtype == 2){
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`, `bounded`, `rental`) VALUES ('"+.@userid1$+"',"+.@LOItems[.@i]+","+.@FreebiesAmount[.@i]+","+.@ItemRefine[.@i]+","+.boundtype+","+.@RentTime[.@i]+")";
+					}else{
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`) VALUES ('"+.@userid1$+"',"+.@LOItems[.@i]+","+.@FreebiesAmount[.@i]+","+.@ItemRefine[.@i]+")";
+					}
+				}
+				dispbottom "Freebies has been sent to the Reward NPC. Please claim your freebies to the Reward NPC at Alberta.";
+				set #freebies,1;
+				end;
+		}else{
+				dispbottom "Your account already claimed the freebies."; 
+		end;
+		}
+	}
+	
+	
+
+	if(.check){
+		query_sql ("SELECT `userid`,`last_mac` FROM `login` WHERE `account_id` = '"+.@faccid+"'",.@userid1$,.@fmacip1$);
+	}else{
+		query_sql ("SELECT `userid`,`last_ip` FROM `login` WHERE `account_id` = '"+.@faccid+"'",.@userid1$,.@fmacip1$);
+	}
+	
+	query_sql ("SELECT `account_user`,`mac_ip` FROM `freebies_db` WHERE `mac_ip` = '"+.@fmacip1$+"'",.@userid2$,.@fmacip2$);
+	query_sql ("SELECT `account_user` FROM `freebies_db` WHERE `account_user` = '"+.@userid1$+"'",.@userid3$);
+	query_sql ("SELECT COUNT(*) FROM `freebies_db` WHERE `mac_ip` = '"+.@fmacip1$+"'",.@maciplimit);
+	
+
+	if(.@fmacip1$ == .macip$){
+		dispbottom "Sorry your "+((.check == 1)?"MAC":"IP")+" Address is still '0' please close your client and relog again.";
+		end;  
+	}
+	
+	if (.@fmacip1$ == .@fmacip2$ && .@userid1$ == .@userid2$ || .@userid1$ == .@userid3$) {dispbottom "Your account already claimed the freebies."; end;}
+	else if (.@maciplimit >=3){dispbottom "Sorry but your "+((.check == 1)?"MAC":"IP")+" Address already reached its limit."; end;}
+	else if (.@fmacip1$ == .@fmacip2$ && .@userid1$ != .@userid2$) {
+		if(BaseLevel < 90){
+			dispbottom "Sorry but someone already claimed his/her freebies on your computer.";
+			dispbottom "But don't worry you can still claim your freebies by typing @freebies when you reach level 90 or above.";
+			end;
+		}
+	}
+
+	for( set .@i, 0; .@i < getarraysize(.@LOItems); set .@i, .@i + 1 ){
+					if(.itemtype == 1){
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`, `bounded`) VALUES ('"+.@userid1$+"',"+.@LOItems[.@i]+","+.@FreebiesAmount[.@i]+","+.@ItemRefine[.@i]+","+.boundtype+")";
+					}else if(.itemtype == 2){
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`, `rental`) VALUES ('"+.@userid1$+"',"+.@LOItems[.@i]+","+.@FreebiesAmount[.@i]+","+.@ItemRefine[.@i]+","+.@RentTime+")";
+					}else{
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`) VALUES ('"+.@userid1$+"',"+.@LOItems[.@i]+","+.@FreebiesAmount[.@i]+","+.@ItemRefine[.@i]+")";
+					}
+	}
+
+	query_sql "INSERT INTO `freebies_db` (`account_user`, `mac_ip`) VALUES ('"+.@userid1$+"','"+.@fmacip1$+"')";
+	dispbottom "Freebies has been sent to the Reward NPC. Please claim your freebies to the Reward NPC at Alberta.";
+	end;
+
+}
+
+
+
+

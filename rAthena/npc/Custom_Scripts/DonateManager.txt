@@ -1,0 +1,82 @@
+prontera,136,171,5	script	Donate Manager	790,{
+mes .npcname$;
+mes "What can I do for you?";
+next;
+switch(select("Convert Credits to Cash Points")) {
+
+case 1:
+	query_sql("SELECT `balance` FROM `cp_credits` WHERE `account_id` = '"+getcharid(3)+"'",.@balance);
+	mes .npcname$;
+	mes "Account Information";
+	mes "Total Credits: ^FF0000"+.@balance+"^000000";
+	mes "Total Cash Points: ^FF0000"+#CASHPOINTS+"^000000";
+	mes "       ";
+	mes "^00FF00Do you really want to covert your credits to Cash Points?^000000";
+next;
+	switch(select("Yes:No.")){
+
+	case 1:
+		mes .npcname$;
+		mes "Account Information";
+		mes "Total Credits: ^FF0000"+.@balance+"^000000";
+		mes "Total Cash Points: ^FF0000"+#CASHPOINTS+"^000000";
+		mes "       ";
+		mes "^0000FFInput the amount you wanted to convert.^000000";
+		next;
+		input .@credits;
+		if(.@credits < 1){goto Invalid;}
+		if(.@credits < .min){goto C_min;}
+		if(.@credits > .@balance){goto C_enough;}
+		next;
+if(.promo){
+	// Bonus Cash Points
+	if(.@credits >= 20000){
+		mes .npcname$;
+		mes "We have a donation promo.";
+		mes "Which one do you want to avail?";
+		switch(select("50% more cash points.:Permanent VIP")){
+		case 1:
+			set .@bonus,.@credits/100*50;
+		case 2:
+			if(#VIP){
+				mes .npcname$;
+				mes "I am sorry you can only avail it once.";
+				close;
+			}
+			set #VIP,1;
+		}
+		next;
+	}
+}
+		atcommand "@cash "+(.@credits + .@bonus)+"";
+		query_sql "update `cp_credits` set `balance` = `balance` - "+ .@credits +" where `account_id` = '"+getcharid(3)+"'";
+		mes .npcname$;
+		mes "Thank you for using this service.";
+		close;
+	
+	case 2:
+		mes .npcname$;
+		mes "I respect your decision. Please try my service again";
+		close;
+	}
+}
+
+C_enough:
+	mes .npcname$;
+	mes "Sorry but you don't have enough credits.";
+	close;
+C_min:
+	mes .npcname$;
+	mes "Sorry but minimum amount to convert credits to cash points is 10,000.";
+	close;
+Invalid:
+	mes .npcname$;
+	mes "Invalid Input.";
+	close;
+	
+OnInit:
+set .promo,0;
+set .min,10000;
+set .npcname$,"[Donate Manager]"; 
+end;
+}

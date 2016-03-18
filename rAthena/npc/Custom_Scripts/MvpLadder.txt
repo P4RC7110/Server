@@ -1,0 +1,235 @@
+-	script	GlobalMvP::GlobalMvP	-1,{
+			
+OnNPCKillEvent:
+	switch(readparam(122)) {
+		// Amon Ra
+		case 1511:
+			goto addpoints;
+			end;
+		// B_EREMES
+		case 1647:
+			goto addpoints;
+			end;
+		// Atroce
+		case 1785:
+			goto addpoints;
+			end;
+		// BACSOJIN_
+		case 1630:
+			goto addpoints;
+			end;
+		// Baphomet
+		case 1039:
+			goto addpoints;
+			end;
+		// BEELZEBUB_
+		case 1874:
+			goto addpoints;
+			end;
+		// Dark Lord
+		case 1272:
+			goto addpoints;
+			end;
+		// Detale
+		case 1719:
+			goto addpoints;
+			end;
+		// Doppelganger
+		case 1046:
+			goto addpoints;
+			end;
+		// Dracula
+		case 1389:
+			goto addpoints;
+			end;
+		// Drake
+		case 1112:
+			goto addpoints;
+			end;
+		// Eddga
+		case 1115:
+			goto addpoints;
+			end;
+		// Entweihen
+		case 1957:
+			goto addpoints;
+			end;
+		// Evil Snake Lord
+		case 1418:
+			goto addpoints;
+			end;
+		// FALLINGBISHOP
+		case 1871:
+			goto addpoints;
+			end;
+		// Garm
+		case 1252:
+			goto addpoints;
+			end;
+		// GLOOMUNDERNIGHT
+		case 1768:
+			goto addpoints;
+			end;
+		// Golden Bug
+		case 1086:
+			goto addpoints;
+			end;
+		// G_MAGALETA
+		case 1802:
+			goto addpoints;
+			end;
+		// High Priest Magaleta
+		case 1649:
+			goto addpoints;
+			end;
+		// High Wizard Katryne
+		case 1651:
+			goto addpoints;
+			end;
+		// Ifrit
+		case 1832:
+			goto addpoints;
+			end;
+		// Incantation Samurai
+		case 1492:
+			goto addpoints;
+			end;
+		// Kiel_
+		case 1734:
+			goto addpoints;
+			end;
+		// Stormy Knight
+		case 1251:
+			goto addpoints;
+			end;
+		// Ktullanux
+		case 1779:
+			goto addpoints;
+			end;
+		// Lady Tanee
+		case 1688:
+			goto addpoints;
+			end;
+		// G_SEYREN
+		case 1640:
+			goto addpoints;
+			end;
+		// Lord Knight Seyren
+		case 1646:
+			goto addpoints;
+			end;
+		// Lord of Death
+		case 1373:
+			goto addpoints;
+			end;
+		// Maya
+		case 1147:
+			goto addpoints;
+			end;
+		// Mistress
+		case 1059:
+			goto addpoints;
+			end;
+		// Moonlight flower
+		case 1150:
+			goto addpoints;
+			end;
+		// Naght Seiger
+		case 1956:
+			goto addpoints;
+			end;
+		// Orc Hero
+		case 1087:
+			goto addpoints;
+			end;
+		// Orc Lord
+		case 1190:
+			goto addpoints;
+			end;
+		// Osiris
+		case 1038:
+			goto addpoints;
+			end;
+		// Pharaoh
+		case 1157:
+			goto addpoints;
+			end;
+		// Phreeoni
+		case 1159:
+			goto addpoints;
+			end;
+		// Poripori
+		case 1502:
+			goto addpoints;
+			end;
+		// RSX
+		case 1623:
+			goto addpoints;
+			end;
+		// Sniper Shecil
+		// Sniper Cecil
+		case 1650:
+			goto addpoints;
+			end;
+		// Tao Gunka
+		case 1583:
+			goto addpoints;
+			end;
+		// Thanatos
+		case 1708:
+			goto addpoints;
+			end;
+		// Turtle General
+		case 1312:
+			goto addpoints;
+			end;
+		// Valkyrie
+		case 1765:
+			goto addpoints;
+			end;
+		// Valkyrie rangdris
+		case 1751:
+			goto addpoints;
+			end;
+		// Vesper
+		case 1685:
+			goto addpoints;
+			end;
+		// Whitesmith Howard
+		case 1648:
+			goto addpoints;
+			end;
+		// Satan Morroc
+		case 1917:
+			goto addpoints;
+			end;
+		// Egnigem Cenia
+		case 1658:
+			goto addpoints;
+			end;
+		// Zmey Gorynych
+		case 1885:
+			goto addpoints;
+			end;
+		// Hard Rock Mamooth
+		case 1990:
+			goto addpoints;
+			end;
+		// Tendrillion
+		case 1991:
+			goto addpoints;
+			end;
+		default:
+			end;
+	} // End switch
+	
+addpoints:
+	query_sql "SELECT `name` FROM `mvp` WHERE `char_id`="+getcharid(0)+"",.@name$;
+	if ( .@name$ == "" ) { query_sql "INSERT INTO `mvp` (`char_id`,`name`,`kills`,`points`) VALUES (" + getcharid(0) + ",'" + escape_sql(strcharinfo(0)) + "',1,1)"; end; }
+	query_sql "UPDATE `mvp` SET `kills` = (`kills` + 1), `points` = (`points` +1) WHERE `char_id`=" + getcharid(0);
+	end;
+	
+OnInit:
+	query_sql("CREATE TABLE IF NOT EXISTS `mvp` (`char_id` int(11) unsigned NOT NULL AUTO_INCREMENT, `name` varchar(255) NOT NULL DEFAULT '0', `kills` int(11) unsigned NOT NULL DEFAULT '0',`points` int(11) unsigned NOT NULL DEFAULT '0', `level` int(11) unsigned NOT NULL DEFAULT '0', KEY `char_id` (`char_id`), KEY `kills` (`kills`), KEY `points` (`level`), KEY `level` (`level`)) ENGINE=MyISAM");
+	end;
+}

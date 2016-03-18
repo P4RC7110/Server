@@ -1,0 +1,19 @@
+prontera,152,183,5	script	Priest	696,{
+
+	if(agitcheck()){
+		percentheal 100,100;
+	}else{
+		percentheal 100,100;
+		skilleffect 29,0; sc_start SC_INCREASEAGI,360000,10;
+		skilleffect 34,0; sc_start SC_BLESSING,360000,10;
+	}
+}
+
+//morocc,164,48,4	duplicate(Priest)	Priest#2	696
+//geffen,107,38,5	duplicate(Priest)	Priest#3	696
+//payon,166,59,4	duplicate(Priest)	Priest#4	696
+//alberta,122,59,4	duplicate(Priest)	Priest#6	696
+//aldebaran,144,128,4	duplicate(Priest)	Priest#7	696
+//izlude,103,107,2	duplicate(Priest)	Priest#8	696
+
+

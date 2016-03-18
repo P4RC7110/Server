@@ -1,0 +1,53 @@
+//-------------------------------------------------------------------------------------------------	
+-	script	LoginEvent	-1,{
+
+OnInit:
+//-------------------------------------------------------------------------------------------------	
+	set .svn,0;			// 0 - rAthena/eAthena, 1 - Hercules
+	bindatcmd "loginevent","LoginEvent::OnDoEvent",80,100;		// Admin reset command
+//-------------------------------------------------------------------------------------------------	
+end;
+
+OnDoEvent:
+		if ( compare( .@atcmd_parameters$, "reset" ) ) {
+
+				if(.svn){
+					query_sql "DELETE FROM `acc_reg_num_db` WHERE `key`='#loginevent'";
+				}else{
+					query_sql "DELETE FROM `global_reg_value` WHERE `str`='#loginevent'";
+				}
+			dispbottom "Login Event has been reset.";
+			end;
+		}
+end;
+
+OnPCLoginEvent:
+if(#loginevent){end;}
+//-------------------------------------------------------------------------------------------------	
+	setarray .@LEItems[0],			 12264,12263;			
+	setarray .@LEAmount[0],			     5,    5;			
+	setarray .@LERefine[0],		             0,    0;			
+	setarray .@LERentTime[0],	             0,    0;			// Input the expiration time of each item. ( Recommended only to equipment type items. ) (Note 4)
+	set .@itemtype,1;	// 2 - Disable, 1 - Item bound, 2 - Rental (Note 2)
+	set .@boundtype,1;	// 1 - Account Bound, 2 - Guild Bound, 3 - Party Bound, 4 - Character Bound (Note 3)
+//-------------------------------------------------------------------------------------------------		
+	set .@faccid, getcharid(3);		
+			query_sql ("SELECT `userid` FROM `login` WHERE `account_id` = '"+.@faccid+"'",.@userid1$);
+			
+				for( set .@i, 0; .@i < getarraysize(.@LEItems); set .@i, .@i + 1 ){
+					if(.@itemtype == 1){
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`, `bounded`) VALUES ('"+.@userid1$+"',"+.@LEItems[.@i]+","+.@LEAmount[.@i]+","+.@LERefine[.@i]+","+.@boundtype+")";
+					}else if(.@itemtype == 2){
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`, `bounded`, `rental`) VALUES ('"+.@userid1$+"',"+.@LEItems[.@i]+","+.@LEAmount[.@i]+","+.@LERefine[.@i]+","+.@boundtype+","+.@LERentTime[.@i]+")";
+					}else{
+						query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`, `refine`) VALUES ('"+.@userid1$+"',"+.@LEItems[.@i]+","+.@LEAmount[.@i]+","+.@LERefine[.@i]+")";
+					}
+				}
+				
+				dispbottom "Login event reward has been sent. Please claim it to the Reward NPC at Alberta.";
+				set #loginevent,1;
+				end;
+
+end;	
+
+}

@@ -1,0 +1,101 @@
+-	script	TreasureHunt	-1,{
+
+
+
+	
+OnInit:
+	setarray .mapName$[0],"geffen","izlude","aldebaran","payon","alberta";		// On which map should the event be
+	set .max, 50;
+	set .Monster, 1732;
+
+	bindatcmd "treasurehunt","TreasureHunt::OnDoTreasureHunt",100,100;		// Admin reset command
+
+		while(.mobstart == 1){
+			set .@k,gettimetick(2) - .MOBStartTick;
+						set .@h,.@k % 86400 / 3600;
+						set .@m,.@k % 3600 / 60;
+						set .@s,.@k % 60;
+			set .@h$, .@h+" hour"+((.@h <= 1)?"":"s");
+			set .@m$, .@m+" minute"+((.@m <= 1)?"":"s");
+			set .@s$, .@s+" second"+((.@s <= 1)?"":"s");
+			set .@time$,""+.@h$+" "+.@m$+" "+.@s$+"";
+
+			if(.@m == 1){
+				announce "Treasure Hunt Event: "+(.MOBKillCount)+" Treasure Chest are still available at "+$MapName$+"!.",0;
+			}else if(.@m == 2){
+				announce "Treasure Hunt Event: "+(.MOBKillCount)+" Treasure Chest are still available at "+$MapName$+"!.",0;
+			}else if(.@m == 3){
+				announce "Treasure Hunt Event: Time is up!.",0;
+				set .mobstart,0;
+				killmonster $MapName$,"All";
+				end;
+			}
+			sleep2 1000;
+
+
+		}
+	end;
+
+
+	
+OnDoTreasureHunt:
+	goto OnEnable;
+	end;
+
+
+OnClock0000:
+OnClock0300:
+OnClock0600:
+OnClock0900:
+OnClock1200:
+OnClock1500:
+OnClock1800:
+OnClock2100:
+goto OnEnable;
+end;
+
+
+// ---------------------------------------------------------------------------
+// - End Monster Labels ------------------------------------------------------
+// ---------------------------------------------------------------------------
+OnEnable:
+		
+		set $MapName$, .mapName$[rand(getarraysize(.mapName$))];
+		announce "Treasure Hunt Event will begin in 1 minute at "+$MapName$+".",0;
+		sleep2 30000;
+		announce "You need to eliminate the "+.max+" Treasure Chest that will be summoned at "+$MapName$+". Each Treasure Chest drops Treasure Box that cost 150,000z each and you only have 3 minutes to eliminate them all.",0;
+		sleep2 30000;		
+		announce "Treasure Hunt Event: We will start in 5",0;
+		sleep2 5000;
+		setmapflag $MapName$,mf_noteleport;
+		setmapflag $MapName$,mf_noskill;
+		set .MOBStartTick, gettimetick(2);
+		set .MOBKillCount, 50;
+		set .mobstart,1;
+		goto OnSpawn;
+		end;
+		
+OnSpawn:
+
+		announce "Treasure Hunt Event: "+getmonsterinfo(.Monster,0)+" has been summoned at "+$MapName$+".",0;
+		monster $MapName$,0,0,"Treasure Chest",1732,50,"TreasureHunt::OnMobKilled";
+		end;
+
+OnMobKilled:
+		set .MOBKillCount, .MOBKillCount - 1;
+		if(.MOBKillCount == 0){
+			set .mobstart,0;
+			announce "Treasure Hunt Event: All treasures has been found!.",0;
+		removemapflag $MapName$,mf_noteleport;
+		removemapflag $MapName$,mf_noskill;
+		}
+		
+		end;
+
+
+}
+
+
+
+
+

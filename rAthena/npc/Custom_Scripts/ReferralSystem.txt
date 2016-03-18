@@ -1,0 +1,111 @@
+-	script	Referral	-1,{
+OnInit:
+	set .mac$,0;
+	set .minlevel,99;
+	set .cash,100;
+	set .n$, "^FF0000[System]^000000";
+	bindatcmd "referral","Referral::OnDoReferral",0,100;	
+	end;
+
+OnDoReferral:
+set .@accid1, getcharid(3);
+set .@name1$, strcharinfo(0);
+query_sql ("SELECT `last_ip` FROM `login` WHERE `account_id` = '"+.@accid1+"'",.@ip1$);
+
+mes .n$;
+mes "Each time you refer a friend to play the game you will receive:";
+mes "    ";
+mes "^0000ffCash Points = "+.cash+"^000000";
+mes "    ";
+mes "The player must be different IP and level 99.";
+next;
+mes .n$;
+mes "Input your the character name.";
+next;
+input .@user$;
+
+query_sql ("SELECT `account_id`,`base_level` FROM `char` WHERE `name` = '"+.@user$+"'",.@accid2,.@baselevel);
+query_sql ("SELECT `last_ip` FROM `login` WHERE `account_id` = '"+.@accid2+"'",.@ip2$);
+
+query_sql ("SELECT `account_id` FROM `referral_db` WHERE `account_id` = '"+.@accid2+"'",.@accid3);
+query_sql ("SELECT `player_ip` FROM `referral_db` WHERE `player_ip` = '"+.@ip2$+"'",.@ip3$);
+
+	mes .n$;
+	mes "Okay, Let me check.";
+	close2;
+	if(!.@accid2){
+		dispbottom "There is no such "+.@user$+" character listed on our database. Please try again..";
+		end;
+	}else if(!isloggedin(.@accid2)){
+		dispbottom "The player that you are referring is offline.";
+		end;
+	}else if(.@baselevel < .minlevel){
+		dispbottom "The player that you are referring is not yet 99.";
+		end;
+	}else if(.@ip2$ == .mac$){
+		dispbottom "Sorry his/her MAC Address is still '0' please close your client and relog again.";
+		end; 
+	}else if(.@ip1$ == .@ip2$){
+		dispbottom "Your IP Address and his/her IP Address is the same.";
+		end;
+	}else if(.@accid3){
+		dispbottom "He/She is already referred by someone.";
+		end;
+	}else if(.@ip3$){
+		dispbottom "This IP Address is already used.";
+		end;
+	}
+
+
+attachrid .@accid2;
+set .@name2$, strcharinfo(0);
+mes .n$;
+mes "Are you sure that you are referred by "+.@name1$+"?";
+mes " ";
+mes "If yes, "+.@name1$+" will receive 100 Cash Points.";
+next;
+switch(select("Yes, I am.:No.")){
+
+case 1:
+
+	if(!isloggedin(.@accid1))
+	{
+		mes .n$;
+		mes "The player who referred you is offline. Try again later.";
+		close;
+	}
+	mes .n$;
+	mes ""+.@name1$+" is now rewarded.";
+	close2;
+	attachrid .@accid1;
+	set #CASHPOINTS, #CASHPOINTS + .cash;
+	dispbottom "Gained "+.cash+" cash points. Total "+#CASHPOINTS+" points.";
+	dispbottom ""+.@name2$+" has accepted your request.";
+	query_sql "INSERT INTO `referral_db` (`account_id` , `player_name` , `player_ip`, `player_referrer`) VALUES ('"+.@accid2+"','"+.@name2$+"','"+.@ip2$+"','"+.@name1$+"')"; 
+	end;
+	
+case 2:
+	mes .n$;
+	mes "Better check first who refers you.";
+	close2;
+	attachrid .@accid1;
+	dispbottom ""+.@name2$+" has cancelled your request.";
+	end;
+}
+end;
+}
+
+
+
+
+/*
+CREATE TABLE IF NOT EXISTS `referral_db` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `account_id` int(11) unsigned NOT NULL default '0',
+  `player_name` varchar(100) NOT NULL default '',
+  `player_ip` varchar(100) NOT NULL default '',
+  `player_referrer` varchar(100) NOT NULL default '',
+  PRIMARY KEY (`account_id`),
+  KEY `id` (`id`)
+) ENGINE=MyISAM;
+*/

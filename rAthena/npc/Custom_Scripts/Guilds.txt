@@ -1,0 +1,178 @@
+prontera,154,198,4	script	WoE Registrar	498,{
+	set .@guild, getcharid(2);
+	query_sql ("SELECT `guild_id` FROM `woe_supplies` WHERE `guild_id` = '"+.@guild+"'",.@guildsu);
+
+ 	if(agitcheck() && getguildmaster(.@guild) != strcharinfo(0)||agitcheck2() && getguildmaster(.@guild) != strcharinfo(0)){
+		mes .npc$;
+		if(getguildmaster(.@guild) != strcharinfo(0)&& !.@guildsu){
+		mes "It's WoE time.";
+		mes "Tell your guild leader to look for me.";
+		}
+			
+		if(.@guildsu){
+			mes "@guildrefill - for WoE Supplies.";
+		}
+
+		
+		close;
+	}else if(.@guild==0){
+		mes .npc$;
+		mes "Sorry I can't talk to you now. I have a private transaction with guild leaders.";
+		close;
+	}else if ( getguildmaster(.@guild) != strcharinfo(0) ) {
+		mes .npc$;
+		mes "Sorry I can't deal with players who are not a guild leader.";
+		close;
+	}
+
+mes .npc$;
+mes "What can I help you?";
+next;
+switch(select("Register for WoE Supplies.")){
+
+case 1:
+	if(.@guildsu){
+		mes .npc$;
+		mes "You are already registered.";
+		close;
+	}
+	mes .npc$;
+	mes "You should pay me 10,000,000z for the registration.";
+	next;
+	switch(select("Sign.:No way..")){
+	case 1:
+			if(zeny < .amountzeny){
+				mes .npc$;
+				mes "I'm so sorry but you don't have enough zeny.";
+				close;
+			}
+			mes .npc$;
+			mes "You are now registered for free WoE Supplies.";
+			mes "@guildrefill - for WoE Supplies.";
+			set zeny, zeny - .amountzeny;
+			query_sql "INSERT INTO `woe_supplies` (`guild_id`, `guild_name`) VALUES ('"+.@guild+"','"+GetGuildName(.@guild)+"')";
+			close;
+	case 2:
+			mes .npc$;
+			mes "You are now registered for free WoE Supplies.";
+			close;
+	
+	}
+
+}
+
+
+	OnInit:
+	set .amountzeny,10000000;
+	set .npc$,"[WoE Registrar]";
+	end;
+
+
+
+
+}
+
+/*
+CREATE TABLE IF NOT EXISTS `woe_supplies` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `guild_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `guild_name` VARCHAR(100) NOT NULL DEFAULT '',
+  PRIMARY KEY (`id`),
+  KEY `id` (`guild_id`)
+) ENGINE=MyISAM;
+*/
+
+
+
+-	script	WoE	-1,{
+OnInit:
+	bindatcmd "guildrefill","WoE::OnDoRefill",0,100;
+end;
+
+
+OnDoRefill:
+		if(gettimetick(2) - #supplies< (300 * 1)) {
+		set .@k, (#supplies+(300 * 1)) - gettimetick(2);
+		set .@m,.@k % 3600 / 60;
+		set .@s,.@k % 60;
+		set .@m$, .@m+" minute"+((.@m <= 1)?"":"s");
+		set .@s$, .@s+" second"+((.@s <= 1)?"":"s");
+		set .@time$,""+.@m$+" "+.@s$+"";
+		dispbottom "You have to wait "+.@time$+" before taking another supplies.";
+		end;
+		}
+		set .@guild, getcharid(2);
+		query_sql ("SELECT `guild_id` FROM `woe_supplies` WHERE `guild_id` = '"+.@guild+"'",.@guildsu);
+if(.@guildsu){
+//-------------------------------------------------------------------------------------------------	
+	if (BaseJob == Job_Knight) {
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	} else if (BaseJob == Job_Priest) {
+		setarray .@items[0],			11502,11501,506,715,716,717,523;			
+		setarray .@amount[0],			   50,  100, 10, 30, 30, 30,  3;
+	} else if (BaseJob == Job_Wizard) {
+		setarray .@items[0],			11502,11501,506,715,716,717;				
+		setarray .@amount[0],			   50,  100, 10, 30, 30, 30;
+	} else if (BaseJob == Job_Blacksmith) {
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	} else if (BaseJob == Job_Hunter) {
+		setarray .@items[0],			11502,11501,506,1065;			
+		setarray .@amount[0],			   50,  100, 10,  30;
+	} else if (BaseJob == Job_Assassin) {
+		setarray .@items[0],			11502,11501,506,678;			
+		setarray .@amount[0],			   50,  100, 10,  2;
+	} else if (BaseJob == Job_Crusader) {
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	} else if (BaseJob == Job_Monk) {
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	} else if (BaseJob == Job_Sage) {
+		setarray .@items[0],			11502,11501,506,715,716,717,1025;			
+		setarray .@amount[0],			   50,  100, 10, 30, 30, 30,  25;
+	} else if (BaseJob == Job_Rogue) {
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	} else if (BaseJob == Job_Alchemist) {
+		setarray .@items[0],			11502,11501,506,7135,7136,7137,547;			
+		setarray .@amount[0],			   50,  100, 10,  10,  10,  10, 25;
+	} else if (BaseJob == Job_Bard) {
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	} else if (BaseJob == Job_Dancer) {
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	}else{
+		setarray .@items[0],			11502,11501,506;			
+		setarray .@amount[0],			   50,  100, 10;
+	}
+			
+		set .@boundtype,4;		
+//-------------------------------------------------------------------------------------------------		
+	if(agitcheck()||agitcheck2()){
+					for( set .@i, 0; .@i < getarraysize(.@items); set .@i, .@i + 1 ){
+						set .@count,countitem2(.@items[.@i],1,0,0,254,0,getbattleflag("woe_reserved_char_id")&0xffff,(getbattleflag("woe_reserved_char_id")>>16)&0xffff);
+							if( checkweight(.@items[.@i],.@amount[.@i]) == 0 ){goto ovw8;}
+							delitem2 .@items[.@i],.@count,1,0,0,254,0,getbattleflag("woe_reserved_char_id")&0xffff,(getbattleflag("woe_reserved_char_id")>>16)&0xffff;
+							getitembound2 .@items[.@i],.@amount[.@i],1,0,0,254,0,getbattleflag("woe_reserved_char_id")&0xffff,(getbattleflag("woe_reserved_char_id")>>16)&0xffff,.@boundtype;
+							dispbottom ""+getitemname(.@items[.@i])+" has successfully refilled.";
+						
+					}
+
+
+
+	set #supplies,gettimetick(2);
+	}else{
+		dispbottom "Note: Not available for this time or you are not allowed to use this command."; 
+	}
+}
+end;
+
+ovw8:
+			dispbottom "It's seen you can't carry the supplies.";
+			dispbottom "Go and store some items on your Kafra Storage.";
+			end;
+		
+}

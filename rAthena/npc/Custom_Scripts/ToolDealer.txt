@@ -1,0 +1,10 @@
+prontera,150,189,5	shop	Tool Dealer#custom	49,1750:-1,1751:-1,601:-1,602:-1,501:-1,502:-1,503:-1,504:-1,506:-1,611:-1,656:-1,645:-1,533:1000,12548:10000
+
+
+
+//morocc,166,53,3	duplicate(Tool Dealer#custom)	Tool Dealer#2	49
+//geffen,103,41,5	duplicate(Tool Dealer#custom)	Tool Dealer#3	49
+//payon,168,54,2	duplicate(Tool Dealer#custom)	Tool Dealer#4	49
+//alberta,125,59,4	duplicate(Tool Dealer#custom)	Tool Dealer#6	49
+//aldebaran,144,122,4	duplicate(Tool Dealer#custom)	Tool Dealer#7	49
+//izlude,99,111,4	duplicate(Tool Dealer#custom)	Tool Dealer#8	49

@@ -1,0 +1,236 @@
+//===== eAthena Script =======================================
+//= Euphy's Quest Shop
+//===== By: ==================================================
+//= Euphy
+//===== Current Version: =====================================
+//= 1.4a - eAthena
+//===== Description: =========================================
+//= A dynamic quest shop based on Lunar's, with easier config.
+//= Includes support for multiple shops & cashpoints.
+//= Item Preview script by ToastOfDoom.
+//============================================================
+					
+prontera,147,174,5	script	Quest Board	857,{
+function Add; function Chk; function Slot; function A_An;
+
+	if(.Shops$ != "") set .@i,1;
+	else {
+		set .@menu$,"";
+		for(set .@i,1; .@i<=getarraysize(.Shops$); set .@i,.@i+1)
+			set .@menu$, .@menu$+.Shops$[.@i]+":";
+		set .@i, select(.@menu$); }
+	dispbottom "Select one item at a time.";
+	callshop "qshop"+.@i,1;
+	npcshopattach "qshop"+.@i;
+	end;
+
+function Add {
+	if (getitemname(getarg(1))=="null") {
+		debugmes "Quest reward #"+getarg(1)+" invalid (skipped)."; return; }
+	for(set .@n,5; .@n<127; set .@n,.@n+2) {
+		if (!getarg(.@n,0)) break;
+		if (getitemname(getarg(.@n))=="null") {
+			debugmes "Quest requirement #"+getarg(.@n)+" invalid (skipped)."; return; } }
+	for(set .@i,2; .@i<.@n; set .@i,.@i+1)
+		set getd(".q_"+getarg(1)+"["+(.@i-2)+"]"), getarg(.@i);
+	npcshopadditem "qshop"+getarg(0),getarg(1),((.ShowZeny)?getarg(3):0);
+	sleep 1;
+	return; }
+function Chk {
+	if (getarg(0)<getarg(1)) { set @qe0,1; return "^FF0000"; }
+	else return "^00FF00"; }
+function Slot {
+	set .@s$,getitemname(getarg(0));
+	switch(.ShowSlot){
+		case 1: if (!getitemslots(getarg(0))) return .@s$;
+		case 2: if (getiteminfo(getarg(0),11)>0) return .@s$+" ["+getitemslots(getarg(0))+"]";
+		default: return .@s$; } }
+function A_An {
+	setarray .@A$[0],"a","e","i","o","u";
+	set .@B$, "_"+getarg(0);
+	for(set .@i,0; .@i<5; set .@i,.@i+1)
+		if (compare(.@B$,"_"+.@A$[.@i])) return "an "+getarg(0);
+	return "a "+getarg(0); }
+
+OnBuyItem:
+	set .@q[0],@bought_nameid;
+	copyarray .@q[1],getd(".q_"+@bought_nameid+"[0]"),getarraysize(getd(".q_"+@bought_nameid+"[0]"));
+	if (!.@q[1]) { message strcharinfo(0),"An error has occurred."; end; }
+	mes "[Quest Board]";
+	mes "Reward: ^0055FF"+((.@q[1]>1)?.@q[1]+"x ":"")+Slot(.@q[0])+"^000000";
+	mes "Requirements:";
+	if (.@q[2]) mes " > "+Chk(Zeny,.@q[2])+.@q[2]+" Zeny^000000";
+	if (.@q[3]) mes " > "+Chk(getd(.Points$[0]),.@q[3])+.@q[3]+" "+.Points$[1]+" ("+getd(.Points$[0])+"/"+.@q[3]+")^000000";
+	if (.@q[4]) for(set .@i,4; .@i<getarraysize(.@q); set .@i,.@i+2)
+		mes " > "+Chk(countitem(.@q[.@i]),.@q[.@i+1])+((.DisplayID)?"{"+.@q[.@i]+"} ":"")+Slot(.@q[.@i])+" ("+countitem(.@q[.@i])+"/"+.@q[.@i+1]+")^000000";
+	next;
+	set @qe1, getiteminfo(.@q[0],5); set @qe2, getiteminfo(.@q[0],11);
+	addtimer 1000, strnpcinfo(1)+"::OnEnd";
+	while(1){
+		switch(select(" ~ Purchase ^0055FF"+getitemname(.@q[0])+"^000000:"+((((@qe1&1) || (@qe1&256) || (@qe1&512)) && @qe2>0 && !@qe6)?" ~ Preview...":"")+": ~ ^777777Cancel^000000")) {
+			case 1:
+				if (@qe0) { 
+					mes "[Quest Board]";
+					mes "You're missing one or more quest requirements.";
+					close; }
+				if (!checkweight(.@q[0],.@q[1])) {
+					mes "[Quest Board]";
+					mes "^FF0000You need "+(((.@q[1]*getiteminfo(.@q[0],6))+Weight-MaxWeight)/10)+" additional weight capacity to complete this trade.^000000";
+					close; }
+				if (.@q[2]) set Zeny, Zeny-.@q[2];
+				if (.@q[3]) setd .Points$[0], getd(.Points$[0])-.@q[3];
+				if (.@q[4]) for(set .@i,4; .@i<getarraysize(.@q); set .@i,.@i+2)
+					delitem .@q[.@i],.@q[.@i+1];
+				getitem .@q[0],.@q[1];
+				if (.announce) announce strcharinfo(0)+" has created "+A_An(getitemname(.@q[0]))+"!",0;
+				specialeffect2 699;
+				close;
+			case 2:
+				set @qe3, getlook(3); set @qe4, getlook(4); set @qe5, getlook(5);
+				if (@qe1&1) atcommand "@changelook 3 "+@qe2;
+				if (@qe1&256) atcommand "@changelook 1 "+@qe2;
+				if (@qe1&512) atcommand "@changelook 2 "+@qe2;
+				set @qe6,1;
+				break;
+			case 3:
+				close; } }
+OnEnd:
+	if (@qe6) { atcommand "@changelook 3 "+@qe3; atcommand "@changelook 1 "+@qe4; atcommand "@changelook 2 "+@qe5; }
+	for(set .@i,0; .@i<7; set .@i,.@i+1) setd "@qe"+.@i,0;
+	end;
+OnInit:
+// --------------------- Config ---------------------
+// Custom points, if needed: "<variable>","<name to display>"
+	setarray .Points$[0],"#CASHPOINTS","Cash Points";
+
+	set .announce,0;	// Announce quest completion? (1: yes / 0: no)
+	set .ShowSlot,2;	// Show item slots? (2: all equipment / 1: if slots > 0 / 0: never)
+	set .DisplayID,0;	// Show item IDs? (1: yes / 0: no)
+	set .ShowZeny,0;	// Show Zeny cost, if any? (1: yes / 0: no)
+
+// Shop categories, if needed: "<Shop 1>","<Shop 2>"{,...};
+// Duplicate dummy data for any additional shops (bottom of script).
+// If no categories, use the second line instead (remove //).
+
+	setarray .Shops$[1],
+	"Limited Items",
+	"Headgear's [A ~ L]",
+	"Headgear's [M ~ Z]"; //,"Quest Item's"
+	//set .Shops$,"n/a";
+
+// Add(<shop number>,<reward ID>,<reward amount>,<Zeny cost>,<point cost>,
+//     <required item ID>,<required item amount>{,...});
+// Shop number corresponds with order above (default is 1).
+// Note: Do NOT use a reward item more than once!
+
+//== Limited Items ==//       
+//	Add(1,5463,1,30000000,500,10019,1,7216,1000,1013,1000); // Rainbow Scarf 
+//	Add(1,5377,1,60000000,500,2268,1,7035,20,1019,100); // G. Pipe 
+
+
+//== Headgear's A ==//  
+	Add(2,5766,1,0,0,10005,1,7106,1000,7107,1000);
+	Add(2,5486,1,0,0,2236,1,978,5);
+	Add(2,5312,1,0,0,969,10,614,1,999,500);
+//== Headgear's B ==// 
+	Add(2,5382,1,0,0,2244,1,10016,1,969,10);
+	Add(2,5427,1,0,0,7063,1,2252,1,978,5);
+	Add(2,5102,1,0,0,739,50,5087,1);
+	Add(2,5506,1,0,0,1059,1000,978,5,7215,10,7213,1);
+	Add(2,5404,1,0,0,978,5,981,5,5085,1);
+	Add(2,5378,1,0,0,2214,1,981,5,975,5,2221,1);
+//== Headgear's C ==// 
+	Add(2,5184,1,0,0,5016,1,991,50);
+	Add(2,5283,1,0,0,9005,1,643,1,976,5);
+	Add(2,5431,1,0,0,5283,1);
+	Add(2,5478,1,0,0,2221,1,980,10);
+	Add(2,5131,1,0,0,5128,1,969,10,614,1);
+	Add(2,5142,1,0,0,5048,1,1234,2,2229,1);
+	Add(2,5135,1,0,0,969,10,614,1,999,200);
+//== Headgear's D ==// 
+	Add(2,5254,1,0,0,5068,1,5035,1,983,5,981,5);
+	Add(2,5313,1,0,0,2235,1,969,5,614,1);
+	Add(2,5258,1,0,0,10005,1,978,5,976,5,975,5);
+	Add(2,5292,1,0,0,7265,500);
+	Add(2,5252,1,0,0,1022,1000,4159,1);
+//== Headgear's E ==// 
+	Add(2,5655,1,0,0,7169,20,5012,1);
+	Add(2,5461,1,0,0,5294,1,979,5);
+	Add(2,5276,1,0,0,10005,1,983,5,976,5,975,5);
+//== Headgear's F ==// 
+	Add(2,5334,1,0,0,5035,1,2254,1);
+//== Headgear's G ==// 
+	Add(2,5186,1,0,0,4280,1,2207,1,1032,250,1033,250);
+	Add(2,5262,1,0,0,969,10,614,1);
+	Add(2,5476,1,0,0,7101,500,2210,1);
+//== Headgear's H ==// 
+	Add(2,5273,1,0,0,10005,1,979,5,982,5,975,5);
+//== Headgear's I ==// 
+	Add(2,5658,1,0,0,9056,1,643,1);
+//== Headgear's J ==//
+	Add(2,5539,1,0,0,7171,500,7172,500,5088,1);
+	Add(2,5396,1,0,0,7300,10,2235,1);
+	Add(2,5335,1,0,0,9001,1,643,1);
+//== Headgear's K ==// 
+//== Headgear's L ==// 
+	Add(2,5419,1,0,0,2270,10);
+	Add(2,5489,1,0,0,5016,1,976,5,980,5);
+//== Headgear's M ==// 
+	Add(3,5561,1,0,0,5045,1,740,500);
+	Add(3,5365,1,0,0,574,1,7031,1000);
+	Add(3,5275,1,0,0,10005,1,976,5,975,5,981,5);
+	Add(3,5475,1,0,0,983,5,2297,1,5090,1);
+	Add(3,18597,1,0,0,1025,3000,976,10,975,10,2229,1);
+	Add(3,5402,1,0,0,2286,1,982,10,949,1000);
+	Add(3,5457,1,0,0,4227,1,982,10,9004,5);
+	Add(3,5214,1,0,0,1022,1000,976,5);
+//== Headgear's N ==//
+	Add(3,5502,1,0,0,2502,1,976,5,975,5,7106,500);
+	Add(3,5151,1,0,0,5001,1,7063,500,978,5);
+
+//== Headgear's O ==//
+	Add(3,5554,1,0,0,962,1000,975,5,2227,1);
+
+//== Headgear's P ==//
+	Add(3,5519,1,0,0,7115,500,7101,500,5268,1);
+	Add(3,5413,1,0,0,1026,1000,996,10);
+	Add(3,5352,1,0,0,4033,1,979,5,5035,1);
+	Add(3,5816,1,0,0,5075,1,981,10);
+	Add(3,5409,1,0,0,5075,1,981,10,7437,1);
+
+//== Headgear's R ==//
+	Add(3,5575,1,0,0,564,300,7272,300,976,5);
+
+//== Headgear's S ==//
+	Add(3,5243,1,0,0,582,300,980,5,7063,200,995,20);
+	Add(3,5508,1,0,0,951,500,978,5,983,5,1053,100);
+	Add(3,5450,1,0,0,975,20,976,20,7095,350);
+
+
+//== Headgear's T ==//
+	Add(3,5395,1,0,0,5049,3,7219,800,7205,500);
+	Add(3,5538,1,0,0,916,500,925,500,981,10,971,100);
+
+//== Headgear's V ==//
+	Add(3,5289,1,0,0,4125,1,7126,1000);
+
+//== Headgear's W ==//
+	Add(3,5579,1,0,0,930,1000,2280,1,978,10);
+	Add(3,5188,1,0,0,979,5,7445,500,2252,1);
+	Add(3,5294,1,0,0,1059,1000,4102,1,982,5);
+	Add(3,5411,1,0,0,4037,1,926,1000,982,5);
+	Add(3,5557,1,0,0,4257,1,7206,1000);
+
+
+
+
+// --------------------------------------------------
+	for(set .@i,1; .@i<=getarraysize(.Shops$); set .@i,.@i+1)
+		npcshopdelitem "qshop"+.@i,909;
+	end;
+}
+
+// -------- Dummy data (duplicate as needed) --------
+-	shop	qshop1	-1,909:-1
+-	shop	qshop2	-1,909:-1
+-	shop	qshop3	-1,909:-1

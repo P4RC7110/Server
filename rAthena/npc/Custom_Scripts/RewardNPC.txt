@@ -1,0 +1,262 @@
+//=================================================================================================
+//== Guild Package System + Freebies System + Reward System 
+//== By: ==========================================================================================
+//== Noriel Calingasan ==
+//== Email: =======================================================================================
+//== noriel.calingasan@yahoo.com ==
+//== Current Version ==============================================================================
+//== 1.4 ==
+//== Working on eAthena,rAthena and Hercules.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.4 Version ==
+//== A new package of Guild Package System, Freebies System and Reward System.
+//== Change and clean some of the variables in the script.
+//== Added freebies script to the package.
+//== Added bound and rental item settings to the Reward NPC.
+//== Added item refinement settings for equipments only.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.3 Version ==
+//== Fixed the @gpcheck command.
+//== Clean the script and SQL database.
+//== Script is now working on Hercules SVN.
+//== Added list of items that you can claim after checking the qualified members you have.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.2 Version ==
+//== All bugs are fixed and 100% safe.
+//== Added notification for players if the guild master is applying for the guild package.
+//== Added guild members divisor.
+//-------------------------------------------------------------------------------------------------	
+//== Change-log: 1.1 Version ==
+//== Added required level to avoid character abuse.
+//===== Description: ==============================================================================
+//== All registered account will be stored automatically to the database depending to your settings.
+//== All items can be claimed in the reward npc.
+//== Suggestion: Use Harmony to avoid IP Address changing.
+//=================================================================================================
+
+
+
+-	script	RewardNPC	-1,{
+
+	set .n$, "^FF0000[Reward NPC]^000000";
+	set .gmlvladmin, 101;
+
+	if (getgmlevel() >= .gmlvladmin)
+	{
+	admin_only:
+		mes .n$;	
+		mes "Hello, "+strcharinfo(0)+"!";
+		mes "What do you want to do?";
+		next;
+		switch(select("Assign Reward:Show Current Processes:Delete Process:Logs"))
+		{
+		case 1:
+				next;
+				mes .n$;
+				mes "To whom username do you wanna give the reward?";
+				input @account$;
+				query_sql "SELECT `account_id` FROM `login` WHERE `userid` = '"+escape_sql(@account$)+"'",.@account_id;
+						if (!.@account_id) {next; mes .n$; mes "The username is invalid."; next; goto admin_only; }
+							else set .@charid,0;
+				next;
+				mes .n$;
+				mes "What will be the reward item?";
+				mes "Please, input the Item ID #";
+				input @inputrewarditem;
+				if (getitemname(@inputrewarditem) == "null" || getitemname(@inputrewarditem) == "") {next; mes .n$; mes "The item doesn't exists in the database."; next; goto admin_only; }
+				set @rewarditem, @inputrewarditem;
+				next;
+				mes .n$;
+				mes "How many "+getitemname(@rewarditem)+" will be given to "+@account$+"?";
+				input @rewardamount;
+				if(@rewardamount <= 0) {next; mes .n$; mes "Please input a number greater than 0"; next; goto admin_only; }
+				next;
+				mes .n$;
+				mes "So, username "+@account$+" will have";
+				mes ""+@rewardamount+" "+getitemname(@rewarditem)+"s. Great~!";
+				next;
+				message @account$,"Please claim your rewards from the Rewards NPC! "+@rewardamount+" "+getitemname(@rewarditem)+"s";
+				query_sql "INSERT INTO `reward_db` (`account_user`, `reward_id`, `reward_amount`) VALUES ('"+@account$+"', "+@rewarditem+", "+@rewardamount+")";
+				setarray $giverlog1$[getarraysize($giverlog1$)],strcharinfo(0);
+				setarray $receiverlog1$[getarraysize($receiverlog1$)],@account$;
+				setarray $itemlog1[getarraysize($itemlog1)],@rewarditem;
+				setarray $amountlog1[getarraysize($amountlog1)],@rewardamount;
+				set @account$, "";
+				close2;
+				end;
+			
+		case 2:
+				next;
+				mes "^FF0000[Current Processes]^000000";
+				mes "••••••••••••••••••••••••••••••••";
+				query_sql "SELECT `account_user`, `reward_id`, `reward_amount` FROM `reward_db`", .@show_name$, .@show_item, .@show_amount;
+				for(set @i, 0; @i < getarraysize(.@show_name$); set @i, @i+1)
+				{
+					mes "To: ^FF0000Account^000000 ^0000FF"+.@show_name$[@i]+"^000000";
+					mes "Reward: "+.@show_amount[@i]+" "+getitemname(.@show_item[@i])+"s";
+					mes "••••••••••••••••••••••••••••••••";
+				}
+				next;
+				goto admin_only;				
+
+		case 3:
+			next;
+			mes .n$;
+			mes "Do you want to delete one process only or all processes?";
+			switch(select("Delete one process only:Delete all processes:Leave it as it is"))
+			{
+			case 1:
+					next;
+					mes .n$;
+					mes "Please input the player username you want to delete the process.";
+					input @deletename$;
+					next;
+					query_sql "SELECT `account_user`, `reward_id`, `reward_amount` FROM `reward_db`", .@delete_name$, .@delete_item, .@delete_amount;
+					for (set @i, 0; @i < getarraysize(.@delete_name$); set @i, @i+1)
+					{
+					if(@deletename$ == .@delete_name$[@i])
+						{
+						mes .n$;
+						mes "Deleting....";
+						query_sql "DELETE FROM `reward_db` WHERE `account_user`='"+@deletename$+"'";
+						next;
+						mes .n$;
+						mes "Deleted unclaimed process!";
+						close;
+						}
+					}
+					goto R_Invalid;
+			case 2:
+				next;
+				mes .n$;
+				mes "Please input DELETE to delete all the unclaimed processes.";
+				input @deleteall$;
+					if(@deleteall$ == "DELETE")
+					{
+						next;
+						mes .n$;
+						mes "Deleting....";
+						query_sql "DELETE FROM `reward_db`";
+						next;
+						mes .n$;
+						mes "Deleted all unclaimed processes!";
+						close;
+					}
+					next;
+					mes .n$;
+					mes "Next time, please input DELETE correctly!";
+					close;
+			case 3:
+				next;
+				mes .n$;
+				mes "Nothing Changed!";
+				close2;
+				end;
+			}
+		case 4:
+		viewlogs:
+			next;
+			mes .n$;
+			mes "Choose what category you want..!";
+			next;
+			switch(select("View Logs",
+				( getgmlevel() <= 20 )?"":"Delete Logs"))
+			{
+			case 1:
+				next;
+				mes .n$;
+				mes "Current logs: ^008000" + (getarraysize($giverlog1$)) + "^000000";
+				mes "--------------------------------";
+				set .@i,0;
+				while (.@i < getarraysize($giverlog1$)) {
+						mes ""+.@i+". ^B041FFGM " + $giverlog1$[.@i] + "^000000 gave "+$amountlog1[.@i]+"x "+getitemname($itemlog1[.@i])+" to Account^55AAFF " + $receiverlog1$[.@i] + "^000000";
+						mes "--------------------------------";
+						set .@i, .@i+1; }
+				next;
+				goto viewlogs;
+			case 2:
+				next;
+				mes .n$;
+				mes "^FF0000This action cannot be undone.^000000";
+				mes "Are you sure?";
+				mes " ";
+				if (select("Yes:No") == 2) { mes "Request cancelled."; next; goto Log_Menu; }
+				deletearray $giverlog1$[0],getarraysize($giverlog1$); deletearray $receiverlog1$[0],getarraysize($receiverlog1$);
+				deletearray $itemlog1[0],getarraysize($itemlog1); deletearray $amountlog1[0],getarraysize($amountlog1);
+				deletearray $giverlog2$[0],getarraysize($giverlog2$); deletearray $receiverlog2$[0],getarraysize($receiverlog2$);
+				deletearray $itemlog2[0],getarraysize($itemlog2); deletearray $amountlog2[0],getarraysize($amountlog2);
+				deletearray $giverlog3$[0],getarraysize($giverlog3$); deletearray $receiverlog3$[0],getarraysize($receiverlog3$);
+				deletearray $itemlog3[0],getarraysize($itemlog3); deletearray $amountlog3[0],getarraysize($amountlog3);
+				next;
+				mes .n$;
+				mes "Logs cleared.";
+				next;
+				goto admin_only;
+			}
+		}
+	}	
+	set .@user, getcharid(3);
+	query_sql("SELECT `userid` FROM `login` WHERE account_id = '"+.@user+"'",.@accid$);
+	query_sql("SELECT `account_user`, `reward_id`, `reward_amount`, `refine`, `bounded`, `rental`  FROM `reward_db` WHERE account_user = '"+.@accid$+"'",.@item$,.@reward_id,.@reward_amount,.@refine,.@bounded,.@rental);
+	mes .n$;
+	mes "I always provide item deliveries from freebies system, guild package system and many more.";
+	next;
+		.@size = getarraysize( .@item$ );
+			for( .@i = 0; .@i < .@size; .@i++ )
+				set .@menu$,.@menu$ +" "+((.@refine[.@i] >= 1)?""+"+"+.@refine[.@i]+"":"")+" "+getitemname( .@reward_id[.@i] ) + "["+getitemslots(.@reward_id[.@i])+"] x " + .@reward_amount[.@i] + ":";
+		.@i = select( .@menu$ ) - 1;
+		if( checkweight(.@reward_id[.@i],.@reward_amount[.@i]) == 0 )
+		{
+			mes .n$;
+			mes "It's seen you can't carry the stuff you want to claim.";
+			mes "Go and store some items on your Kafra Storage.";
+			close;
+		}
+		if(.@rental[.@i] < 1 && .@bounded[.@i] >= 1 && getiteminfo(.@reward_id[.@i],5) >= 1){
+		
+			getitembound2 .@reward_id[.@i],.@reward_amount[.@i],1,.@refine[.@i],0,0,0,0,0,.@bounded[.@i];
+		
+		}else if(.@rental[.@i] < 1 && .@bounded[.@i] >= 1 && getiteminfo(.@reward_id[.@i],2) == 0){
+		
+			getitembound2 .@reward_id[.@i],.@reward_amount[.@i],1,0,0,0,0,0,0,.@bounded[.@i];
+		
+		}else if(.@rental[.@i] < 1 && .@bounded[.@i] >= 1 && getiteminfo(.@reward_id[.@i],2) == 2){
+		
+			getitembound2 .@reward_id[.@i],.@reward_amount[.@i],1,0,0,0,0,0,0,.@bounded[.@i];
+		
+		}else if(.@rental[.@i] < 1 && .@bounded[.@i] >= 1 && getiteminfo(.@reward_id[.@i],2) == 3){
+		
+			getitembound2 .@reward_id[.@i],.@reward_amount[.@i],1,0,0,0,0,0,0,.@bounded[.@i];
+		
+		}else if(.@rental[.@i] < 1 && .@bounded[.@i] >= 1 && getiteminfo(.@reward_id[.@i],2) == 6){
+		
+			getitembound2 .@reward_id[.@i],.@reward_amount[.@i],1,0,0,0,0,0,0,.@bounded[.@i];
+		
+		}else if(.@rental[.@i] >= 1 && getiteminfo(.@reward_id[.@i],2) >= 1){
+		
+			rentitem2 .@reward_id[.@i],.@rental[.@i],1,.@refine[.@i],0,0,0,0,0;
+	
+		}else{
+		
+			getitem2 .@reward_id[.@i],.@reward_amount[.@i],1,.@refine[.@i],0,0,0,0,0;
+		
+		}
+		
+		query_sql "DELETE FROM `reward_db` WHERE (`account_user` = '"+ .@accid$ +"' AND `reward_id` = '"+.@reward_id[.@i]+ "' AND `reward_amount` = '"+.@reward_amount[.@i]+"') limit 1";
+		next;
+		mes .n$;
+		mes "Here's your "+((.@refine[.@i] >= 1)?""+"+"+.@refine[.@i]+"":"")+" "+getitemname(.@reward_id[.@i])+" x "+.@reward_amount[.@i]+".";
+		close;
+	
+	
+	
+R_Invalid:
+	mes .n$;
+	mes "Invalid. Does not exists in the logs!";
+	close;
+	
+
+
+}
+
+alberta,148,56,3	duplicate(RewardNPC)	Reward NPC	833

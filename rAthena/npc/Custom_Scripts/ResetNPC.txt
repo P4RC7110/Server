@@ -1,0 +1,87 @@
+prontera,155,283,4	script	The Great Alchemist	749,{
+mes .npcname$;
+mes "So are you satisfied with your";
+mes "current stat allocation?";
+mes "Of course not, if you want to make";
+mes "a change then listen on.";
+next;
+mes .npcname$;
+mes "I use the power of the";
+mes "^009900"+getitemname(.stoneid)+"^000000 to help adventurers";
+mes "reset their stat choices.";
+mes "Of course the more powerful the";
+mes "adventurer, the more ^009900"+getitemname(.stoneid)+"s^000000";
+mes "I need the perform the reset.";
+next;
+for(set .@i,0; .@i<getarraysize(.minrange); set .@i,.@i+1) {
+if(BaseLevel >= .minrange[.@i] && BaseLevel <= .maxrange[.@i]) {
+set .@stonesreq,.stones[.@i];
+}
+}
+mes .npcname$;
+mes "For instance you would require.";
+mes "^009900"+getitemname(.stoneid)+" x "+.@stonesreq+"^000000 to reset all your stats to 1 and get all your status points back.";
+next;
+switch(select("Tell me More!","Lets reset now.",""+((.event == 0)?"[FREE RESET] ONCE PER DAY.":"[^FF0000EVENT^000000] 1 DAY UNLI RESET.")+"","Later.")) {
+case 1:
+mes .npcname$;
+for(set .@i,0; .@i<getarraysize(.minrange); set .@i,.@i+1) {
+mes "Base Lvl ^000099"+.minrange[.@i]+" - "+.maxrange[.@i]+"^000000 ^009900["+.stones[.@i]+" "+getitemname(.stoneid)+"]^000000";
+}
+close;
+case 2:
+mes .npcname$;
+mes "Ok let's start checking.";
+next;
+if(Weight > 0) {
+mes .npcname$;
+mes "Lower your weight to 0";
+close;
+}
+if(checkcart()) { setcart 0; }
+if(checkfalcon()) { setfalcon 0;}
+if(checkriding()) { setriding 0;}
+if(countitem(.stoneid) >= .@stonesreq) {
+delitem .stoneid,.@stonesreq;
+resetstatus;
+close;
+}
+else {
+mes .npcname$;
+mes "You do not have enough ^009900"+getitemname(.stoneid)+"s^000000";
+close;
+}
+case 3:
+mes .npcname$;	
+if(!.event){
+	if( !FreeReset ){
+		set FreeReset,1;
+		mes "You can only avail the free reset once per day...";
+		resetstatus;
+	}else{
+
+		mes "You have reset for free already.";
+	}
+}else{
+	mes "Stat reset has been granted...";
+	resetstatus;
+}
+close;
+
+case 4:
+close;
+}
+
+OnClock0000:
+query_sql "DELETE FROM `global_reg_value` WHERE `str`='FreeReset'";
+end;
+
+OnInit:
+set .event,0;		// On = 1 Off = 0
+set .stoneid,6320;	// reset stone id = 6320
+set .npcname$,"["+strnpcinfo(0)+"]";
+setarray .minrange[0], 1;  // Min Level Required
+setarray .maxrange[0],99;  // Max Level Required
+setarray .stones[0],   1;  // Number of Stones
+end;
+}

@@ -1,0 +1,135 @@
+
+//--------------------------------------------------------------
+// Script Title: Dye clothes for coupon Author: ASB Stuff
+//--------------------------------------------------------------
+// Revision History: v1.0
+//--------------------------------------------------------------
+// 1.0 First version, converted from Aegis [Dr.Evil]
+//--------------------------------------------------------------
+// Additional Notes: * Official-certified / Aegis-certified *
+//--------------------------------------------------------------
+
+
+prontera,168,162,4	script	Stylist Dinorah Lacostt	862,{
+
+mes "[Stylist Dinorah Lacostt]";
+mes "Heeeeeello~wooooooooo. I am";
+mes "a stylist who can change your";
+mes "clothes to match your";
+mes "unique style~ Uh-huh!";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "If you give me a ^FF0000New Clothing Dye Coupon^000000,";
+mes "I'll change the color of your clothes~";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "And if you give me an ^FF0000Original Clothing Dye Coupon^000000,";
+mes "I'll change the color of your clothes... back to the original!";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "Ah, You should be advised that";
+mes "^FF0000if you change your job";
+mes "^FF0000after you've dyed your clothes,^000000";
+mes "^FF0000the original color will be shown^000000";
+mes "^FF0000 on the screen. But if you relog,^000000";
+mes "^FF0000you can see the dyed color again.^000000";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "^FF0000And one more thing!!";
+mes "^FF0000We have only one color for";
+mes "^FF0000each job class. So if you";
+mes "^FF0000dye twice, the color will be";
+mes "^FF0000the same. It would be useless.";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "Uh-huh~ Now, I told you everything.";
+mes "Tell me what you want~";
+next;
+switch(select("Dye clothes.","Restore original color.","Stop talking.")) {
+case 1:
+if (countitem(6046) > 0) {
+mes "[Stylist Dinorah Lacostt]";
+mes "Good choice~ I'll do it~";
+mes "very~very~ quickly~.";
+mes "Haaap!";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "Huu~ It's done very";
+mes "quickly~. Isn't it pretty?~";
+mes "From now~ swagger on the street";
+mes "with this beautiful clothes~";
+delitem 6046,1;
+setlook 7,2;
+close;
+} else {
+mes "[Stylist Dinorah Lacostt]";
+mes "No-ou~ You don't have";
+mes "a ^FF0000New Clothing Dye Coupon^000000~";
+mes "Please visit me again";
+mes "after you get one~";
+close;
+}
+break;
+case 2:
+if (countitem(6047) > 0) {
+if ((Class == Job_Novice && Upper == 1) || (Class == Job_Swordman && Upper == 1) || (Class == Job_Thief && Upper == 1) || (Class == Job_Mage && Upper == 1) || (Class == Job_Merchant && Upper == 1) || (Class == Job_Archer && Upper == 1) || (Class == Job_Acolyte && Upper == 1)) {
+mes "[Stylist Dinorah Lacostt]";
+mes "Good choice~ I'll do it~";
+mes "very~very~ quickly~.";
+mes "Haaap!";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "Huu~ It's done very";
+mes "quickly~. Isn't it pretty?~";
+mes "From now~ swagger on the streets";
+mes "with these beautiful clothes~";
+delitem 6047,1;
+//changepallete 1 1
+setlook 7,1;
+close;
+} else if ((Class == Job_Knight && Upper == 1) || (Class == Job_Crusader && Upper == 1) || (Class == Job_Assassin && Upper == 1) || (Class == Job_Rogue && Upper == 1) || (Class == Job_Priest && Upper == 1) || (Class == Job_Monk && Upper == 1) || (Class == Job_Hunter && Upper == 1) || (Class == Job_Bard && Upper == 1) || (Class == Job_Dancer && Upper == 1) || (Class == Job_Wizard && Upper == 1) || (Class == Job_Sage && Upper == 1) || (Class == Job_Blacksmith && Upper == 1) || (Class == Job_Alchemist && Upper == 1)) {
+mes "[Stylist Dinorah Lacostt]";
+mes "Good choice~ I'll do it~";
+mes "very~very~ quickly~.";
+mes "Haaap!";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "Huu~ It's done very";
+mes "quickly~. Isn't it pretty?~";
+mes "From now~ swagger on the streets";
+mes "with these beautiful clothes~";
+delitem 6047,1;
+//changepallete 1 0
+setlook 7,0;
+close;
+} else {
+mes "[Stylist Dinorah Lacostt]";
+mes "Good choice~ I'll do it~";
+mes "very~very~ quickly~.";
+mes "Haaap!";
+next;
+mes "[Stylist Dinorah Lacostt]";
+mes "Huu~ It's done very";
+mes "quickly~. Isn't it pretty?~";
+mes "From now~ swagger on the streets";
+mes "with these beautiful clothes~";
+delitem 6047,1;
+//changepallete 1 0
+setlook 7,0;
+close;
+}
+} else {
+mes "[Stylist Dinorah Lacostt]";
+mes "No-ou~ You don't have";
+mes "a ^FF0000Original Clothing Dye Coupon^000000~";
+mes "Please visit me again";
+mes "after you get one~";
+close;
+}
+break;
+case 3:
+mes "[Stylist Dinorah Lacostt]";
+mes "Visit me again if you change your mind~~";
+close;
+}
+}
